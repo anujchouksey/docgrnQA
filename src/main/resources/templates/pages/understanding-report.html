@@ -223,8 +223,8 @@
         <section id="stakeholder" class="report-section">
             <h2>👔 Stakeholder Explanation</h2>
             <div class="tabs">
-                <button class="tab-btn active" onclick="showTab('stakeholder-view')">Stakeholder</button>
-                <button class="tab-btn" onclick="showTab('technical-view')">Technical</button>
+                <button class="tab-btn active" onclick="showTab('stakeholder-view', event)">Stakeholder</button>
+                <button class="tab-btn" onclick="showTab('technical-view', event)">Technical</button>
             </div>
             <div id="stakeholder-view" class="tab-content active insight-card">
                 <p th:text="${insight?.stakeholderExplanation}">stakeholder</p>
@@ -273,11 +273,11 @@
 <script th:src="@{/static/js/main.js}"></script>
 <script>
     mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
-    function showTab(id) {
+    function showTab(id, evt) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(id).classList.remove('hidden');
-        event.target.classList.add('active');
+        if (evt && evt.target) { evt.target.classList.add('active'); }
     }
 </script>
 </body>

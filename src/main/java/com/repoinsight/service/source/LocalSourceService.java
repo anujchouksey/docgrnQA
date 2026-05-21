@@ -40,7 +40,16 @@ public class LocalSourceService {
             return source;
         }
 
-        Path path = Paths.get(localPath.trim());
+        // Normalize the path to remove any ".." traversal segments before touching the file system
+        Path path;
+        try {
+            path = Paths.get(localPath.trim()).toAbsolutePath().normalize();
+        } catch (InvalidPathException e) {
+            source.setValid(false);
+            source.setValidationError("Invalid path characters: " + e.getMessage());
+            return source;
+        }
+
         if (!Files.exists(path)) {
             source.setValid(false);
             source.setValidationError("Path does not exist: " + localPath);
@@ -52,7 +61,7 @@ public class LocalSourceService {
             return source;
         }
 
-        source.setPath(path.toAbsolutePath().toString());
+        source.setPath(path.toString());
         source.setResolvedName(PathUtil.inferProjectName(localPath));
 
         // Count files and size

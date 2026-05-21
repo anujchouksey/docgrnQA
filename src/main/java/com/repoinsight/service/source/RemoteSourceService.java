@@ -51,12 +51,12 @@ public class RemoteSourceService {
             return source;
         }
 
-        String projectName = PathUtil.inferProjectName(remoteUrl);
+        String projectName = PathUtil.sanitizePathSegment(PathUtil.inferProjectName(remoteUrl));
         source.setResolvedName(projectName);
 
-        // Prepare workspace directory
-        Path workspaceBase = Paths.get(properties.getWorkspace().getBaseDir());
-        Path cloneTarget = workspaceBase.resolve(source.getId() + "_" + projectName);
+        // Prepare workspace directory using a sanitized, normalized path
+        Path workspaceBase = Paths.get(properties.getWorkspace().getBaseDir()).toAbsolutePath().normalize();
+        Path cloneTarget = workspaceBase.resolve(source.getId() + "_" + projectName).normalize();
 
         try {
             Files.createDirectories(workspaceBase);
@@ -110,7 +110,14 @@ public class RemoteSourceService {
 
     private void cleanup(Path dir) {
         if (dir == null || !Files.exists(dir)) return;
-        try (var stream = Files.walk(dir)) {
+        // Normalize before deletion to prevent traversal outside the workspace
+        Path safeDir = dir.toAbsolutePath().normalize();
+        Path workspace = Paths.get(properties.getWorkspace().getBaseDir()).toAbsolutePath().normalize();
+        if (!safeDir.startsWith(workspace)) {
+            log.warn("Refusing to delete path outside workspace: {}", safeDir);
+            return;
+        }
+        try (var stream = Files.walk(safeDir)) {
             stream.sorted(java.util.Comparator.reverseOrder())
                   .forEach(p -> { try { Files.deleteIfExists(p); } catch (IOException ignored) {} });
         } catch (IOException ignored) {}

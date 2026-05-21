@@ -59,6 +59,19 @@ public final class PathUtil {
     }
 
     /**
+     * Sanitizes a string for safe use as a file path segment.
+     * Removes characters that could cause path traversal (e.g. {@code ..}, {@code /}, {@code \}).
+     */
+    public static String sanitizePathSegment(String segment) {
+        if (segment == null || segment.isBlank()) return "unknown";
+        // Strip any path separators and traversal sequences; keep alphanumeric, dash, underscore, dot
+        return segment.replaceAll("[^a-zA-Z0-9._\\-]", "_")
+                      .replaceAll("\\.\\.", "__")
+                      .replaceAll("^[._]+", "")
+                      .replaceAll("[._]+$", "");
+    }
+
+    /**
      * Returns true when the given URL looks like a Git remote URL.
      */
     public static boolean isGitUrl(String input) {
