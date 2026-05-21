@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Coverage Analysis Setup – RepoInsight</title>
+    <link rel="stylesheet" th:href="@{/static/css/main.css}"/>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/" class="nav-brand"><span class="brand-icon">🔍</span><span class="brand-name">RepoInsight</span></a>
+        <div class="nav-links">
+            <a th:href="@{/}" class="nav-link">Home</a>
+            <a th:href="@{/coverage/setup}" class="nav-link active">Coverage Analysis</a>
+            <a th:href="@{/understanding/setup}" class="nav-link">Repo Understanding</a>
+            <a th:href="@{/settings}" class="nav-link">Settings</a>
+        </div>
+    </div>
+</nav>
+
+<main class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>📊 Coverage Intelligence Setup</h1>
+            <p class="page-subtitle">Configure your development and QA repositories for coverage analysis.</p>
+        </div>
+
+        <div class="ai-banner ai-disabled" th:unless="${aiEnabled}">
+            <span>⚡</span> Running in <strong>Non-AI Mode</strong> — deterministic heuristic analysis.
+        </div>
+        <div class="ai-banner ai-enabled" th:if="${aiEnabled}">
+            <span>✨</span> <strong>AI Mode Active</strong> — AI enrichment will enhance analysis results.
+        </div>
+
+        <form th:action="@{/coverage/analyze}" th:object="${request}" method="post" class="analysis-form">
+            <input type="hidden" th:field="*{mode}" value="COVERAGE"/>
+
+            <div class="form-row">
+                <!-- AI toggle -->
+                <div class="form-group">
+                    <label class="form-label">AI Enrichment</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" th:field="*{aiEnabled}" th:disabled="${!aiEnabled}"/>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label" th:if="${aiEnabled}">Enable AI</span>
+                        <span class="toggle-label" th:unless="${aiEnabled}">AI not configured</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Dev Repo -->
+            <div class="repo-section">
+                <h2 class="section-label">🛠️ Development Repository</h2>
+                <p class="section-hint">The application / source code repository to analyze.</p>
+
+                <div class="source-type-tabs">
+                    <label class="tab-option">
+                        <input type="radio" th:field="*{devSourceType}" value="LOCAL" checked="checked"/> 📁 Local Folder
+                    </label>
+                    <label class="tab-option">
+                        <input type="radio" th:field="*{devSourceType}" value="REMOTE"/> 🌐 Remote Git URL
+                    </label>
+                </div>
+
+                <div class="source-inputs">
+                    <div class="form-group dev-local-group">
+                        <label class="form-label" for="devLocalPath">Local Folder Path</label>
+                        <input type="text" id="devLocalPath" th:field="*{devLocalPath}"
+                               class="form-input" placeholder="/path/to/your/application"/>
+                        <span class="form-hint">Absolute path to the local repository folder</span>
+                    </div>
+                    <div class="form-group dev-remote-group hidden">
+                        <label class="form-label" for="devRemoteUrl">Remote Git URL</label>
+                        <input type="text" id="devRemoteUrl" th:field="*{devRemoteUrl}"
+                               class="form-input" placeholder="https://github.com/org/repo.git"/>
+                        <div class="form-group">
+                            <label class="form-label" for="devBranch">Branch (optional)</label>
+                            <input type="text" id="devBranch" th:field="*{devBranch}"
+                                   class="form-input" placeholder="main"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QA Repo -->
+            <div class="repo-section">
+                <h2 class="section-label">🧪 QA / BDD Repository</h2>
+                <p class="section-hint">The test automation / BDD repository to compare against.</p>
+
+                <div class="source-type-tabs">
+                    <label class="tab-option">
+                        <input type="radio" th:field="*{qaSourceType}" value="LOCAL" checked="checked"/> 📁 Local Folder
+                    </label>
+                    <label class="tab-option">
+                        <input type="radio" th:field="*{qaSourceType}" value="REMOTE"/> 🌐 Remote Git URL
+                    </label>
+                </div>
+
+                <div class="source-inputs">
+                    <div class="form-group qa-local-group">
+                        <label class="form-label" for="qaLocalPath">Local Folder Path</label>
+                        <input type="text" id="qaLocalPath" th:field="*{qaLocalPath}"
+                               class="form-input" placeholder="/path/to/your/qa-repository"/>
+                    </div>
+                    <div class="form-group qa-remote-group hidden">
+                        <label class="form-label" for="qaRemoteUrl">Remote Git URL</label>
+                        <input type="text" id="qaRemoteUrl" th:field="*{qaRemoteUrl}"
+                               class="form-input" placeholder="https://github.com/org/qa-tests.git"/>
+                        <div class="form-group">
+                            <label class="form-label" for="qaBranch">Branch (optional)</label>
+                            <input type="text" id="qaBranch" th:field="*{qaBranch}"
+                                   class="form-input" placeholder="main"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Options -->
+            <div class="repo-section">
+                <h2 class="section-label">⚙️ Options</h2>
+                <div class="form-group">
+                    <label class="form-label" for="scopeFilter">Scope Filter (optional)</label>
+                    <input type="text" id="scopeFilter" th:field="*{scopeFilter}"
+                           class="form-input" placeholder="e.g. payments, auth, api/users"/>
+                    <span class="form-hint">Comma-separated module names to focus analysis on</span>
+                </div>
+            </div>
+
+            <!-- Validation errors -->
+            <div th:if="${#fields.hasErrors('*')}" class="error-box">
+                <ul>
+                    <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+                </ul>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">🚀 Start Coverage Analysis</button>
+                <a th:href="@{/}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="footer-content">
+        <p>RepoInsight &copy; 2025 — Enterprise QA Intelligence Platform</p>
+    </div>
+</footer>
+
+<script th:src="@{/static/js/main.js}"></script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Settings – RepoInsight</title>
+    <link rel="stylesheet" th:href="@{/static/css/main.css}"/>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/" class="nav-brand"><span class="brand-icon">🔍</span><span class="brand-name">RepoInsight</span></a>
+        <div class="nav-links">
+            <a th:href="@{/}" class="nav-link">Home</a>
+            <a th:href="@{/coverage/setup}" class="nav-link">Coverage Analysis</a>
+            <a th:href="@{/understanding/setup}" class="nav-link">Repo Understanding</a>
+            <a th:href="@{/settings}" class="nav-link active">Settings</a>
+        </div>
+    </div>
+</nav>
+
+<main class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>⚙️ Settings</h1>
+            <p class="page-subtitle">Configuration overview for RepoInsight. Edit <code>application.yml</code> to change these values.</p>
+        </div>
+
+        <!-- AI Status -->
+        <div class="settings-section">
+            <h2>🤖 AI Configuration</h2>
+            <div class="settings-card" th:classappend="${aiEnabled ? 'enabled' : 'disabled'}">
+                <div class="setting-row">
+                    <span class="setting-label">AI Enabled</span>
+                    <span class="setting-value">
+                        <span th:if="${aiEnabled}" class="badge badge-success">✅ Yes</span>
+                        <span th:unless="${aiEnabled}" class="badge badge-warning">❌ No</span>
+                    </span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">AI Provider</span>
+                    <span class="setting-value" th:text="${aiProvider}">none</span>
+                </div>
+                <div class="setting-info" th:unless="${aiEnabled}">
+                    <p>To enable AI enrichment, update your <code>application.yml</code>:</p>
+                    <pre class="code-block">repoinsight:
+  ai:
+    enabled: true
+    provider: openai
+    openai:
+      api-key: your-api-key-here
+      model: gpt-4o</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scoring Weights -->
+        <div class="settings-section">
+            <h2>📊 Coverage Scoring Weights</h2>
+            <p>These weights control how coverage scores are computed. Edit <code>application.yml</code> to tune them.</p>
+            <div class="settings-card" th:if="${scoring != null}">
+                <div class="setting-row">
+                    <span class="setting-label">Exact Match Weight</span>
+                    <span class="setting-value" th:text="${scoring.exactMatchWeight}">1.0</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Token Overlap Weight</span>
+                    <span class="setting-value" th:text="${scoring.tokenOverlapWeight}">0.8</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Path Alignment Weight</span>
+                    <span class="setting-value" th:text="${scoring.pathAlignmentWeight}">0.6</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Fuzzy Match Weight</span>
+                    <span class="setting-value" th:text="${scoring.fuzzyWeight}">0.5</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Tag Match Weight</span>
+                    <span class="setting-value" th:text="${scoring.tagMatchWeight}">0.9</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Min Covered Threshold</span>
+                    <span class="setting-value" th:text="${scoring.minCoveredThreshold}">0.7</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Min Partial Threshold</span>
+                    <span class="setting-value" th:text="${scoring.minPartialThreshold}">0.3</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Config -->
+        <div class="settings-section">
+            <h2>🔍 Analysis Configuration</h2>
+            <div class="settings-card" th:if="${properties != null}">
+                <div class="setting-row">
+                    <span class="setting-label">Max File Size</span>
+                    <span class="setting-value" th:text="${properties.analysis.maxFileSizeKb + ' KB'}">512 KB</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Max Files per Repo</span>
+                    <span class="setting-value" th:text="${properties.analysis.maxFilesPerRepo}">5000</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Workspace Directory</span>
+                    <span class="setting-value"><code th:text="${properties.workspace.baseDir}">dir</code></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage Guide -->
+        <div class="settings-section">
+            <h2>📖 Usage Guide</h2>
+            <div class="settings-card">
+                <h3>Running an Analysis</h3>
+                <ol>
+                    <li>Navigate to <a th:href="@{/coverage/setup}">Coverage Analysis</a> or <a th:href="@{/understanding/setup}">Repository Understanding</a></li>
+                    <li>Enter your repository paths (local folder or remote Git URL)</li>
+                    <li>Click "Start Analysis"</li>
+                    <li>Wait for analysis to complete (progress is shown in real-time)</li>
+                    <li>View the report in your browser or export as HTML/JSON</li>
+                </ol>
+                <h3>Supported Repository Types</h3>
+                <ul>
+                    <li>Local folder paths (absolute path)</li>
+                    <li>Remote Git repositories (HTTPS or SSH URL)</li>
+                    <li>GitHub repositories (https://github.com/owner/repo)</li>
+                </ul>
+                <h3>Supported Languages</h3>
+                <p>Java, Kotlin, TypeScript, JavaScript, Python, Ruby, Go, C# — and more via generic file analysis.</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="footer-content">
+        <p>RepoInsight &copy; 2025 — Enterprise QA Intelligence Platform</p>
+    </div>
+</footer>
+
+<script th:src="@{/static/js/main.js}"></script>
+</body>
+</html>

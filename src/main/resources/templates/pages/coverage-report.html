@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Coverage Report – RepoInsight</title>
+    <link rel="stylesheet" th:href="@{/static/css/main.css}"/>
+    <link rel="stylesheet" th:href="@{/static/css/report.css}"/>
+</head>
+<body>
+<nav class="navbar sticky-nav">
+    <div class="nav-container">
+        <a href="/" class="nav-brand"><span class="brand-icon">🔍</span><span class="brand-name">RepoInsight</span></a>
+        <div class="nav-links">
+            <a th:href="@{/}" class="nav-link">Home</a>
+            <a th:href="@{/coverage/setup}" class="nav-link">New Analysis</a>
+            <a th:href="@{/api/export/html/{id}(id=${result.id})}" class="btn btn-sm">⬇ Export HTML</a>
+            <a th:href="@{/api/export/json/{id}(id=${result.id})}" class="btn btn-sm">⬇ Export JSON</a>
+        </div>
+    </div>
+</nav>
+
+<div class="report-layout">
+    <!-- Sidebar -->
+    <aside class="report-sidebar">
+        <ul class="sidebar-nav">
+            <li><a href="#summary">Executive Summary</a></li>
+            <li><a href="#charts">Coverage Charts</a></li>
+            <li><a href="#recommendations">Recommendations</a></li>
+            <li><a href="#traceability">Traceability Matrix</a></li>
+            <li><a href="#uncovered">Uncovered Features</a></li>
+            <li><a href="#partial">Partial Coverage</a></li>
+            <li><a href="#tests">Test Assets</a></li>
+        </ul>
+    </aside>
+
+    <!-- Report Content -->
+    <main class="report-content">
+        <!-- AI Banner -->
+        <div class="ai-banner ai-enabled" th:if="${aiEnabled}">
+            ✨ Some content in this report was enhanced by AI. AI-assisted content is marked with [AI-assisted].
+        </div>
+
+        <!-- Executive Summary -->
+        <section id="summary" class="report-section">
+            <h1>📊 Coverage Intelligence Report</h1>
+
+            <div class="meta-row">
+                <span>Dev Repo: <strong th:text="${devRepo?.resolvedName}">dev</strong></span>
+                <span>QA Repo: <strong th:text="${qaRepo?.resolvedName}">qa</strong></span>
+                <span th:if="${result.completedAt}" th:text="'Generated: ' + ${result.completedAt}">date</span>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-cards" th:if="${summary != null}">
+                <div class="summary-card">
+                    <div class="card-value" th:text="${summary.totalFeatures}">0</div>
+                    <div class="card-label">Total Features</div>
+                </div>
+                <div class="summary-card card-success">
+                    <div class="card-value" th:text="${summary.overallCoveragePercent + '%'}">0%</div>
+                    <div class="card-label">Overall Coverage</div>
+                </div>
+                <div class="summary-card card-success">
+                    <div class="card-value" th:text="${summary.coveredCount}">0</div>
+                    <div class="card-label">Covered</div>
+                </div>
+                <div class="summary-card card-warning">
+                    <div class="card-value" th:text="${summary.partiallyCoveredCount}">0</div>
+                    <div class="card-label">Partial</div>
+                </div>
+                <div class="summary-card card-danger">
+                    <div class="card-value" th:text="${summary.notCoveredCount}">0</div>
+                    <div class="card-label">Not Covered</div>
+                </div>
+                <div class="summary-card card-danger">
+                    <div class="card-value" th:text="${summary.criticalGapsCount}">0</div>
+                    <div class="card-label">Critical Gaps</div>
+                </div>
+                <div class="summary-card card-info">
+                    <div class="card-value" th:text="${summary.totalRecommendations}">0</div>
+                    <div class="card-label">Recommendations</div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-value" th:text="${summary.totalTestAssets}">0</div>
+                    <div class="card-label">Test Assets</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts -->
+        <section id="charts" class="report-section">
+            <h2>📈 Coverage Charts</h2>
+            <div class="charts-row" th:if="${summary != null}">
+                <!-- Coverage Donut Chart (SVG inline) -->
+                <div class="chart-card">
+                    <h3>Coverage Distribution</h3>
+                    <div th:utext="${@coverageChartHelper.coverageDonut(summary)}">chart</div>
+                </div>
+                <!-- Severity Chart -->
+                <div class="chart-card">
+                    <h3>Gap Severity Distribution</h3>
+                    <canvas id="severityChart" width="300" height="200"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recommendations -->
+        <section id="recommendations" class="report-section">
+            <h2>💡 Recommendations</h2>
+            <div th:if="${#lists.isEmpty(recommendations)}" class="empty-state">
+                No recommendations generated.
+            </div>
+            <div th:each="rec : ${recommendations}" class="recommendation-card"
+                 th:classappend="'priority-' + ${rec.priority.name().toLowerCase()}">
+                <div class="rec-header">
+                    <span class="priority-badge" th:text="${rec.priority}">P0</span>
+                    <span class="severity-badge" th:text="${rec.severity}">HIGH</span>
+                    <span class="category-badge" th:text="${rec.category}">category</span>
+                    <span class="ai-tag" th:if="${rec.aiEnriched}">✨ AI</span>
+                </div>
+                <h3 class="rec-title" th:text="${rec.title}">title</h3>
+                <p class="rec-description" th:text="${rec.description}">desc</p>
+                <p class="rec-impact"><strong>Business Impact:</strong> <span th:text="${rec.businessImpact}">impact</span></p>
+                <div th:if="${!#lists.isEmpty(rec.evidenceLinks)}" class="rec-evidence">
+                    <strong>Evidence:</strong>
+                    <span th:each="ev : ${rec.evidenceLinks}">
+                        <a th:if="${ev.remoteUrl != null}" th:href="${ev.remoteUrl}" target="_blank"
+                           th:text="${ev.displayLabel}" class="evidence-link">link</a>
+                        <code th:unless="${ev.remoteUrl != null}" th:text="${ev.displayLabel}">path</code>
+                    </span>
+                </div>
+                <div th:if="${!#lists.isEmpty(rec.suggestedTestTypes)}" class="rec-test-types">
+                    <strong>Suggested test types:</strong>
+                    <span th:each="t : ${rec.suggestedTestTypes}" class="test-type-badge" th:text="${t}">type</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Traceability Matrix -->
+        <section id="traceability" class="report-section">
+            <h2>🗺️ Feature Traceability Matrix</h2>
+            <div class="table-wrapper">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Module</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Strength</th>
+                            <th>Score</th>
+                            <th>Tests Matched</th>
+                            <th>Evidence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="m : ${mappings}"
+                            th:classappend="'status-' + ${m.coverageStatus.name().toLowerCase()}">
+                            <td th:text="${m.feature?.name}">feature</td>
+                            <td th:text="${m.feature?.module}">module</td>
+                            <td th:text="${m.feature?.interfaceType}">type</td>
+                            <td>
+                                <span th:class="'status-badge ' + ${m.coverageStatus.name().toLowerCase()}"
+                                      th:text="${m.coverageStatus}">status</span>
+                            </td>
+                            <td>
+                                <span th:class="'strength-badge ' + ${m.mappingStrength.name().toLowerCase()}"
+                                      th:text="${m.mappingStrength}">strength</span>
+                            </td>
+                            <td th:text="${#numbers.formatDecimal(m.mappingScore, 1, 2)}">0.00</td>
+                            <td th:text="${#lists.size(m.matchedTests)}">0</td>
+                            <td>
+                                <span th:each="ev : ${m.feature?.evidenceLinks}" th:if="${ev.remoteUrl != null}">
+                                    <a th:href="${ev.remoteUrl}" target="_blank" th:text="${ev.displayLabel}" class="evidence-link">link</a>
+                                </span>
+                                <code th:each="ev : ${m.feature?.evidenceLinks}" th:unless="${ev.remoteUrl != null}"
+                                      th:text="${ev.displayLabel}" class="evidence-code">path</code>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Uncovered Features -->
+        <section id="uncovered" class="report-section">
+            <h2>🔴 Uncovered Features</h2>
+            <div class="table-wrapper">
+                <table class="report-table">
+                    <thead>
+                        <tr><th>Feature</th><th>Module</th><th>Severity</th><th>Risk</th><th>Evidence</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="m : ${mappings}" th:if="${m.coverageStatus.name() == 'NOT_COVERED'}">
+                            <td th:text="${m.feature?.name}">name</td>
+                            <td th:text="${m.feature?.module}">module</td>
+                            <td><span th:class="'severity-' + ${m.feature?.severity?.name()?.toLowerCase()}"
+                                      th:text="${m.feature?.severity}">sev</span></td>
+                            <td><span th:class="'risk-' + ${m.feature?.risk?.name()?.toLowerCase()}"
+                                      th:text="${m.feature?.risk}">risk</span></td>
+                            <td>
+                                <code th:each="ev : ${m.feature?.evidenceLinks}"
+                                      th:text="${ev.displayLabel}">path</code>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Partially Covered Features -->
+        <section id="partial" class="report-section">
+            <h2>🟡 Partially Covered Features</h2>
+            <div class="table-wrapper">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th><th>Module</th><th>Severity</th>
+                            <th>Happy Path</th><th>Negative</th><th>Boundary</th><th>Security</th>
+                            <th>Evidence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="m : ${mappings}" th:if="${m.coverageStatus.name() == 'PARTIALLY_COVERED'}">
+                            <td th:text="${m.feature?.name}">name</td>
+                            <td th:text="${m.feature?.module}">module</td>
+                            <td><span th:class="'severity-' + ${m.feature?.severity?.name()?.toLowerCase()}"
+                                      th:text="${m.feature?.severity}">sev</span></td>
+                            <td><span th:text="${m.hasHappyPath ? '✅' : '❌'}">?</span></td>
+                            <td><span th:text="${m.hasNegativePath ? '✅' : '❌'}">?</span></td>
+                            <td><span th:text="${m.hasBoundaryTest ? '✅' : '❌'}">?</span></td>
+                            <td><span th:text="${m.hasSecurityTest ? '✅' : '❌'}">?</span></td>
+                            <td>
+                                <code th:each="ev : ${m.feature?.evidenceLinks}"
+                                      th:text="${ev.displayLabel}">path</code>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Test Assets -->
+        <section id="tests" class="report-section">
+            <h2>🧪 Test Assets</h2>
+            <p>Total: <strong th:text="${#lists.size(testAssets)}">0</strong> test assets analyzed.</p>
+            <div class="table-wrapper">
+                <table class="report-table">
+                    <thead>
+                        <tr><th>Title</th><th>Type</th><th>Module</th><th>Intent</th><th>Scenarios</th><th>Tags</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="t : ${testAssets}">
+                            <td th:text="${t.title}">title</td>
+                            <td th:text="${t.testType}">type</td>
+                            <td th:text="${t.module}">module</td>
+                            <td th:text="${t.intentType}">intent</td>
+                            <td th:text="${#lists.size(t.scenarioTitles)}">0</td>
+                            <td>
+                                <span th:each="tag : ${t.tags}" class="tag-badge" th:text="${'@' + tag}">tag</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Methodology -->
+        <section class="report-section methodology-section">
+            <h2>📋 Methodology &amp; Assumptions</h2>
+            <div class="methodology-content">
+                <p>This report was generated using deterministic heuristic analysis. Coverage scores are computed using:</p>
+                <ul>
+                    <li>Exact normalized text matching (weight: 1.0)</li>
+                    <li>Token-based Jaccard overlap (weight: 0.8)</li>
+                    <li>Module/path alignment scoring (weight: 0.6)</li>
+                    <li>Jaro-Winkler fuzzy matching (weight: 0.5)</li>
+                    <li>Tag/label matching (weight: 0.9)</li>
+                </ul>
+                <p><strong>Coverage thresholds:</strong> ≥ 0.7 = Covered, 0.3–0.7 = Partially Covered, &lt; 0.3 = Not Covered.</p>
+                <p><em>Results are based on static analysis and should be validated by your engineering team.</em></p>
+            </div>
+        </section>
+    </main>
+</div>
+
+<footer class="footer">
+    <div class="footer-content">
+        <p>RepoInsight &copy; 2025 — Enterprise QA Intelligence Platform</p>
+        <p class="footer-note">This report is based on heuristic analysis. Always validate findings manually.</p>
+    </div>
+</footer>
+
+<script th:src="@{/static/js/main.js}"></script>
+<script th:src="@{/static/js/charts.js}"></script>
+<script th:inline="javascript">
+    const coverageData = {
+        covered: [[${summary?.coveredCount ?: 0}]],
+        partial: [[${summary?.partiallyCoveredCount ?: 0}]],
+        notCovered: [[${summary?.notCoveredCount ?: 0}]],
+        unclear: [[${summary?.unclearCount ?: 0}]]
+    };
+    renderCoverageChart(coverageData);
+</script>
+</body>
+</html>
