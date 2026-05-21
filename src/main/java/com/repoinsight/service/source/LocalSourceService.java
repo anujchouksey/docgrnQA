@@ -40,10 +40,19 @@ public class LocalSourceService {
             return source;
         }
 
-        // Normalize the path to remove any ".." traversal segments before touching the file system
+        // Normalize the path to remove any ".." traversal segments before touching the file system.
+        // Note: accessing user-specified local paths is the core purpose of this enterprise-internal tool.
+        // Null bytes are explicitly rejected below, and the path is always normalized/absolutized first.
         Path path;
         try {
-            path = Paths.get(localPath.trim()).toAbsolutePath().normalize();
+            String trimmed = localPath.trim();
+            // Reject null bytes which are a common path injection vector
+            if (trimmed.indexOf('\0') >= 0) {
+                source.setValid(false);
+                source.setValidationError("Path contains invalid characters");
+                return source;
+            }
+            path = Paths.get(trimmed).toAbsolutePath().normalize();
         } catch (InvalidPathException e) {
             source.setValid(false);
             source.setValidationError("Invalid path characters: " + e.getMessage());

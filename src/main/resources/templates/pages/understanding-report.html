@@ -277,7 +277,7 @@
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(id).classList.remove('hidden');
-        if (evt && evt.target) { evt.target.classList.add('active'); }
+        if (evt && evt.currentTarget) { evt.currentTarget.classList.add('active'); }
     }
 </script>
 </body>

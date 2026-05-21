@@ -61,14 +61,26 @@ public final class PathUtil {
     /**
      * Sanitizes a string for safe use as a file path segment.
      * Removes characters that could cause path traversal (e.g. {@code ..}, {@code /}, {@code \}).
+     * Uses character-by-character replacement to avoid regex ReDoS on user input.
      */
     public static String sanitizePathSegment(String segment) {
         if (segment == null || segment.isBlank()) return "unknown";
-        // Strip any path separators and traversal sequences; keep alphanumeric, dash, underscore, dot
-        return segment.replaceAll("[^a-zA-Z0-9._\\-]", "_")
-                      .replaceAll("\\.\\.", "__")
-                      .replaceAll("^[._]+", "")
-                      .replaceAll("[._]+$", "");
+        StringBuilder sb = new StringBuilder(segment.length());
+        for (char c : segment.toCharArray()) {
+            if (Character.isLetterOrDigit(c) || c == '-') {
+                sb.append(c);
+            } else {
+                sb.append('_');
+            }
+        }
+        // Trim leading/trailing underscores
+        String result = sb.toString();
+        int start = 0;
+        int end = result.length();
+        while (start < end && result.charAt(start) == '_') start++;
+        while (end > start && result.charAt(end - 1) == '_') end--;
+        result = result.substring(start, end);
+        return result.isEmpty() ? "unknown" : result;
     }
 
     /**

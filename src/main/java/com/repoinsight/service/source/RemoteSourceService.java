@@ -109,14 +109,15 @@ public class RemoteSourceService {
     }
 
     private void cleanup(Path dir) {
-        if (dir == null || !Files.exists(dir)) return;
-        // Normalize before deletion to prevent traversal outside the workspace
+        if (dir == null) return;
+        // Normalize first, then verify path is within the workspace before any file system access
         Path safeDir = dir.toAbsolutePath().normalize();
         Path workspace = Paths.get(properties.getWorkspace().getBaseDir()).toAbsolutePath().normalize();
         if (!safeDir.startsWith(workspace)) {
             log.warn("Refusing to delete path outside workspace: {}", safeDir);
             return;
         }
+        if (!Files.exists(safeDir)) return;
         try (var stream = Files.walk(safeDir)) {
             stream.sorted(java.util.Comparator.reverseOrder())
                   .forEach(p -> { try { Files.deleteIfExists(p); } catch (IOException ignored) {} });
