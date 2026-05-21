@@ -1,0 +1,74 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: RepoInsight
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  jackson:
+    serialization:
+      indent-output: true
+    default-property-inclusion: non_null
+
+repoinsight:
+  workspace:
+    base-dir: ${java.io.tmpdir}/repoinsight-workspace
+    cleanup-on-exit: true
+  analysis:
+    max-file-size-kb: 512
+    max-files-per-repo: 5000
+    include-extensions:
+      - .java
+      - .kt
+      - .feature
+      - .groovy
+      - .js
+      - .ts
+      - .py
+      - .go
+      - .rb
+      - .xml
+      - .yaml
+      - .yml
+      - .json
+      - .properties
+    exclude-dirs:
+      - .git
+      - node_modules
+      - target
+      - build
+      - dist
+      - .gradle
+      - .idea
+      - .vscode
+  coverage:
+    scoring:
+      exact-match-weight: 1.0
+      token-overlap-weight: 0.8
+      path-alignment-weight: 0.6
+      fuzzy-weight: 0.5
+      tag-match-weight: 0.9
+      min-covered-threshold: 0.7
+      min-partial-threshold: 0.3
+  ai:
+    enabled: false
+    provider: none
+    # provider: openai
+    # openai:
+    #   api-key: your-api-key-here
+    #   model: gpt-4o
+    #   base-url: https://api.openai.com/v1
+    #   max-tokens: 2048
+    #   temperature: 0.3
+
+logging:
+  level:
+    com.repoinsight: INFO
+    org.eclipse.jgit: WARN

@@ -1,0 +1,16 @@
+spring:
+  thymeleaf:
+    cache: false
+
+repoinsight:
+  ai:
+    enabled: false
+  workspace:
+    cleanup-on-exit: true
+  analysis:
+    max-files-per-repo: 100
+
+logging:
+  level:
+    com.repoinsight: WARN
+    org.eclipse.jgit: ERROR

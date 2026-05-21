@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:replace="${pageTitle} ?: 'RepoInsight'">RepoInsight</title>
+    <link rel="stylesheet" th:href="@{/static/css/main.css}"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <!-- Mermaid CDN for diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <th:block th:replace="${extraHead}"></th:block>
+</head>
+<body>
+<!-- ── Navigation ── -->
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/" class="nav-brand">
+            <span class="brand-icon">🔍</span>
+            <span class="brand-name">RepoInsight</span>
+            <span class="brand-tagline">QA Intelligence Platform</span>
+        </a>
+        <div class="nav-links">
+            <a th:href="@{/}" class="nav-link">Home</a>
+            <a th:href="@{/coverage/setup}" class="nav-link">Coverage Analysis</a>
+            <a th:href="@{/understanding/setup}" class="nav-link">Repo Understanding</a>
+            <a th:href="@{/settings}" class="nav-link">Settings</a>
+            <span th:if="${aiEnabled}" class="ai-badge">✨ AI</span>
+        </div>
+    </div>
+</nav>
+
+<!-- ── Main content ── -->
+<main class="main-content" th:replace="${content}">
+    <!-- Page content goes here -->
+</main>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+    <div class="footer-content">
+        <p>RepoInsight &copy; 2025 &mdash; QA Intelligence Platform</p>
+        <p class="footer-note">Analysis results are heuristic-based. Always validate findings manually.</p>
+    </div>
+</footer>
+
+<script th:src="@{/static/js/main.js}"></script>
+<script>
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script>
+<th:block th:replace="${extraScripts}"></th:block>
+</body>
+</html>

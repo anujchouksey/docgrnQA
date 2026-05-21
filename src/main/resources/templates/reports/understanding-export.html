@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="'Repo Understanding – ' + ${insight?.repoName}">Repository Understanding Report</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; color: #1a202c; background: #f7fafc; }
+        .header { background: linear-gradient(135deg, #48bb78 0%, #2f855a 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 24px; }
+        h1 { margin: 0 0 8px 0; font-size: 28px; } h2 { color: #2d3748; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        .section { margin-bottom: 40px; }
+        .insight-card { background: white; border-radius: 8px; padding: 20px; margin: 12px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .modules-grid { display: flex; flex-wrap: wrap; gap: 16px; }
+        .module-card { background: white; border-radius: 8px; padding: 16px; min-width: 200px; flex: 1; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-top: 4px solid #667eea; }
+        .module-name { font-size: 16px; font-weight: 700; color: #2d3748; } .module-role { font-size: 12px; color: #718096; margin-bottom: 8px; }
+        pre { background: #f7fafc; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; border: 1px solid #e2e8f0; }
+        ul { line-height: 1.8; }
+        .risk-item { background: #fff5f5; border: 1px solid #fed7d7; border-radius: 6px; padding: 8px 12px; margin: 4px 0; font-family: monospace; font-size: 13px; }
+        .security-item { background: #fffbeb; border-color: #fef08a; }
+        .ai-banner { background: #ebf4ff; border: 1px solid #bee3f8; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; color: #2b6cb0; }
+        .summary-cards { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0; }
+        .summary-card { background: white; border-radius: 8px; padding: 20px; min-width: 120px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card-value { font-size: 32px; font-weight: 700; color: #2d3748; } .card-label { font-size: 12px; color: #718096; }
+        a { color: #4299e1; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });</script>
+
+<div class="header">
+    <h1>🏗️ Repository Understanding Report</h1>
+    <h2 style="color:white;border:none" th:text="${insight?.repoName}">Repository Name</h2>
+    <p>Language: <strong th:text="${insight?.dominantLanguage}">lang</strong> |
+       Files: <strong th:text="${insight?.totalFiles}">0</strong> |
+       Modules: <strong th:text="${#lists.size(insight?.modules ?: #lists.emptyList())}">0</strong>
+    </p>
+    <p th:text="'Generated: ' + ${result.completedAt}">date</p>
+    <p th:if="${result.aiEnabled}">✨ AI Enrichment was enabled for this analysis.</p>
+</div>
+
+<div class="ai-banner" th:if="${insight?.aiEnriched}">
+    ✨ This report includes AI-assisted analysis. AI-generated content is marked with [AI-assisted].
+</div>
+
+<div class="section">
+    <h2>Summary</h2>
+    <div class="summary-cards">
+        <div class="summary-card"><div class="card-value" th:text="${insight?.totalFiles}">0</div><div class="card-label">Files Analyzed</div></div>
+        <div class="summary-card"><div class="card-value" th:text="${#lists.size(insight?.modules ?: #lists.emptyList())}">0</div><div class="card-label">Architecture Layers</div></div>
+        <div class="summary-card"><div class="card-value" th:text="${#lists.size(insight?.externalIntegrations ?: #lists.emptyList())}">0</div><div class="card-label">Integrations</div></div>
+        <div class="summary-card"><div class="card-value" th:text="${#lists.size(insight?.highRiskChangeAreas ?: #lists.emptyList())}">0</div><div class="card-label">Risk Areas</div></div>
+    </div>
+    <div class="insight-card"><h3>Executive Summary</h3><p th:text="${insight?.executiveSummary}">summary</p></div>
+    <div class="insight-card"><h3>System Purpose</h3><p th:text="${insight?.systemPurpose}">purpose</p></div>
+    <div class="insight-card"><h3>Domain Context</h3><p th:text="${insight?.domainContext}">domain</p></div>
+</div>
+
+<div class="section">
+    <h2>Architecture Modules</h2>
+    <div class="modules-grid">
+        <div th:each="mod : ${insight?.modules}" class="module-card">
+            <div class="module-name" th:text="${mod.name}">name</div>
+            <div class="module-role" th:text="${mod.role}">role</div>
+            <p th:text="${mod.description}">desc</p>
+        </div>
+    </div>
+    <div class="insight-card"><h3>Architecture Overview</h3><p th:text="${insight?.architectureOverview}">overview</p></div>
+</div>
+
+<div class="section">
+    <h2>Architecture Diagrams</h2>
+    <div class="insight-card">
+        <h3>Architecture</h3>
+        <div class="mermaid" th:text="${insight?.mermaidArchitectureDiagram}">graph TD</div>
+    </div>
+    <div class="insight-card">
+        <h3>Request Flow</h3>
+        <div class="mermaid" th:text="${insight?.mermaidFlowDiagram}">sequenceDiagram</div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Request Lifecycle &amp; Core Logic</h2>
+    <div class="insight-card"><p th:text="${insight?.requestLifecycle}">lifecycle</p></div>
+    <div class="insight-card"><h3>Core Logic</h3><p th:text="${insight?.coreLogicExplanation}">logic</p></div>
+</div>
+
+<div class="section">
+    <h2>External Integrations</h2>
+    <ul><li th:each="i : ${insight?.externalIntegrations}" th:text="${i}">integration</li></ul>
+</div>
+
+<div class="section">
+    <h2>High-Risk Change Areas</h2>
+    <div th:each="r : ${insight?.highRiskChangeAreas}" class="risk-item" th:text="${r}">risk</div>
+    <h3>Security-Sensitive Areas</h3>
+    <div th:each="s : ${insight?.securitySensitiveAreas}" class="risk-item security-item" th:text="${s}">sec</div>
+</div>
+
+<div class="section">
+    <h2>QA Strategy</h2>
+    <div class="insight-card"><p th:text="${insight?.recommendedQaStrategy}">strategy</p></div>
+</div>
+
+<div class="section">
+    <h2>Suggested Gherkin Scenarios</h2>
+    <pre th:each="g : ${insight?.suggestedGherkinScenarios}" th:text="${g}">scenario</pre>
+</div>
+
+<div class="section">
+    <h2>Edge Cases</h2>
+    <ul><li th:each="e : ${insight?.edgeCases}" th:text="${e}">edge</li></ul>
+</div>
+
+<div class="section">
+    <h2>Stakeholder Explanation</h2>
+    <div class="insight-card"><p th:text="${insight?.stakeholderExplanation}">stakeholder</p></div>
+    <h3>Technical Explanation</h3>
+    <div class="insight-card"><p th:text="${insight?.technicalExplanation}">technical</p></div>
+</div>
+
+<div class="section">
+    <h2>Assumptions &amp; Limitations</h2>
+    <div class="insight-card"><h3>Assumptions</h3><ul><li th:each="a : ${insight?.assumptions}" th:text="${a}">a</li></ul></div>
+    <div class="insight-card"><h3>Limitations</h3><ul><li th:each="l : ${insight?.limitations}" th:text="${l}">l</li></ul></div>
+</div>
+</body>
+</html>

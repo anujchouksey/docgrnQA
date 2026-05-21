@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>RepoInsight – QA Intelligence Platform</title>
+    <link rel="stylesheet" th:href="@{/static/css/main.css}"/>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/" class="nav-brand">
+            <span class="brand-icon">🔍</span>
+            <span class="brand-name">RepoInsight</span>
+            <span class="brand-tagline">QA Intelligence Platform</span>
+        </a>
+        <div class="nav-links">
+            <a th:href="@{/}" class="nav-link">Home</a>
+            <a th:href="@{/coverage/setup}" class="nav-link">Coverage Analysis</a>
+            <a th:href="@{/understanding/setup}" class="nav-link">Repo Understanding</a>
+            <a th:href="@{/settings}" class="nav-link">Settings</a>
+            <span th:if="${aiEnabled}" class="ai-badge">✨ AI</span>
+        </div>
+    </div>
+</nav>
+
+<main class="main-content">
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">QA Intelligence Platform</h1>
+            <p class="hero-subtitle">
+                Analyze repositories, measure test coverage, understand architecture — powered by deterministic
+                analysis with optional AI enrichment.
+            </p>
+            <div class="hero-actions">
+                <a th:href="@{/coverage/setup}" class="btn btn-primary btn-lg">
+                    📊 Coverage Analysis
+                </a>
+                <a th:href="@{/understanding/setup}" class="btn btn-secondary btn-lg">
+                    🏗️ Repo Understanding
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mode Cards -->
+    <section class="mode-cards">
+        <div class="container">
+            <h2 class="section-title">Choose Your Analysis Mode</h2>
+            <div class="cards-grid">
+                <!-- Coverage Card -->
+                <div class="card card-coverage">
+                    <div class="card-icon">📊</div>
+                    <h3 class="card-title">Coverage Intelligence</h3>
+                    <p class="card-description">
+                        Compare your development repository against your QA/BDD repository.
+                        Identify uncovered features, measure coverage scores, and get prioritized recommendations.
+                    </p>
+                    <ul class="feature-list">
+                        <li>✅ Feature-to-test mapping</li>
+                        <li>✅ Coverage status &amp; scoring</li>
+                        <li>✅ Gap analysis &amp; recommendations</li>
+                        <li>✅ Evidence links to source files</li>
+                        <li>✅ Risk-weighted prioritization</li>
+                    </ul>
+                    <div class="card-inputs">
+                        <span class="input-badge">📁 Local Folder</span>
+                        <span class="input-badge">🌐 Remote Git URL</span>
+                    </div>
+                    <a th:href="@{/coverage/setup}" class="btn btn-primary">Start Coverage Analysis →</a>
+                </div>
+
+                <!-- Understanding Card -->
+                <div class="card card-understanding">
+                    <div class="card-icon">🏗️</div>
+                    <h3 class="card-title">Repository Understanding</h3>
+                    <p class="card-description">
+                        Analyze a single repository or local folder and generate a comprehensive
+                        understanding report — architecture, workflows, risks, and test strategy.
+                    </p>
+                    <ul class="feature-list">
+                        <li>✅ Architecture discovery</li>
+                        <li>✅ Module &amp; dependency analysis</li>
+                        <li>✅ Mermaid diagrams</li>
+                        <li>✅ Gherkin scenario suggestions</li>
+                        <li>✅ QA strategy recommendations</li>
+                    </ul>
+                    <div class="card-inputs">
+                        <span class="input-badge">📁 Local Folder</span>
+                        <span class="input-badge">🌐 Remote Git URL</span>
+                    </div>
+                    <a th:href="@{/understanding/setup}" class="btn btn-secondary">Analyze Repository →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Status Banner -->
+    <section class="ai-status-section" th:if="${aiEnabled}">
+        <div class="container">
+            <div class="ai-banner ai-enabled">
+                <span class="ai-banner-icon">✨</span>
+                <strong>AI Enrichment Active</strong> — Analysis results can be enhanced with AI-powered
+                semantic understanding and recommendations. AI-generated content will be clearly labeled.
+            </div>
+        </div>
+    </section>
+    <section class="ai-status-section" th:unless="${aiEnabled}">
+        <div class="container">
+            <div class="ai-banner ai-disabled">
+                <span class="ai-banner-icon">⚡</span>
+                <strong>Non-AI Mode</strong> — Running fully deterministic heuristic analysis.
+                Enable AI in <a th:href="@{/settings}">Settings</a> for enhanced insights.
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Results -->
+    <section class="recent-section" th:if="${recentResults != null and !#lists.isEmpty(recentResults)}">
+        <div class="container">
+            <h2 class="section-title">Recent Analyses</h2>
+            <div class="results-table-wrapper">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Run ID</th>
+                            <th>Mode</th>
+                            <th>Status</th>
+                            <th>Started</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="r : ${recentResults}">
+                            <td><code th:text="${r.id}">id</code></td>
+                            <td>
+                                <span th:text="${r.mode}" class="badge badge-mode">mode</span>
+                            </td>
+                            <td>
+                                <span th:class="'badge badge-status-' + ${r.status.name().toLowerCase()}"
+                                      th:text="${r.status}">status</span>
+                            </td>
+                            <td th:text="${r.startedAt}">started</td>
+                            <td>
+                                <a th:if="${r.status.name() == 'COMPLETED' and r.mode.name() == 'COVERAGE'}"
+                                   th:href="@{/coverage/report/{id}(id=${r.id})}" class="btn btn-sm">View</a>
+                                <a th:if="${r.status.name() == 'COMPLETED' and r.mode.name() == 'UNDERSTANDING'}"
+                                   th:href="@{/understanding/report/{id}(id=${r.id})}" class="btn btn-sm">View</a>
+                                <a th:if="${r.status.name() == 'IN_PROGRESS'}"
+                                   th:href="@{/coverage/progress/{id}(id=${r.id})}" class="btn btn-sm btn-warning">In Progress</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="footer-content">
+        <p>RepoInsight &copy; 2025 &mdash; Enterprise QA Intelligence Platform</p>
+        <p class="footer-note">Results are heuristic-based. Validate findings with your engineering team.</p>
+    </div>
+</footer>
+
+<script th:src="@{/static/js/main.js}"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</body>
+</html>

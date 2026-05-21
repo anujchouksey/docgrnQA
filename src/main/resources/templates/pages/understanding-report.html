@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Repository Understanding Report – RepoInsight</title>
+    <link rel="stylesheet" th:href="@{/static/css/main.css}"/>
+    <link rel="stylesheet" th:href="@{/static/css/report.css}"/>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+<nav class="navbar sticky-nav">
+    <div class="nav-container">
+        <a href="/" class="nav-brand"><span class="brand-icon">🔍</span><span class="brand-name">RepoInsight</span></a>
+        <div class="nav-links">
+            <a th:href="@{/}" class="nav-link">Home</a>
+            <a th:href="@{/understanding/setup}" class="nav-link">New Analysis</a>
+            <a th:href="@{/api/export/html/{id}(id=${result.id})}" class="btn btn-sm">⬇ Export HTML</a>
+            <a th:href="@{/api/export/json/{id}(id=${result.id})}" class="btn btn-sm">⬇ Export JSON</a>
+        </div>
+    </div>
+</nav>
+
+<div class="report-layout">
+    <!-- Sidebar -->
+    <aside class="report-sidebar">
+        <ul class="sidebar-nav">
+            <li><a href="#executive">Executive Summary</a></li>
+            <li><a href="#modules">Architecture Modules</a></li>
+            <li><a href="#diagrams">Diagrams</a></li>
+            <li><a href="#integrations">Integrations</a></li>
+            <li><a href="#risks">Risk Areas</a></li>
+            <li><a href="#security">Security</a></li>
+            <li><a href="#qa-strategy">QA Strategy</a></li>
+            <li><a href="#gherkin">Gherkin Scenarios</a></li>
+            <li><a href="#edge-cases">Edge Cases</a></li>
+            <li><a href="#stakeholder">Stakeholder View</a></li>
+            <li><a href="#assumptions">Assumptions</a></li>
+        </ul>
+    </aside>
+
+    <!-- Report Content -->
+    <main class="report-content">
+        <!-- AI Banner -->
+        <div class="ai-banner ai-enabled" th:if="${aiEnabled and insight?.aiEnriched}">
+            ✨ This report includes AI-assisted analysis. AI-generated content is marked with [AI-assisted].
+        </div>
+
+        <!-- Header -->
+        <section id="executive" class="report-section">
+            <h1>🏗️ Repository Understanding Report</h1>
+            <h2 class="repo-title" th:text="${insight?.repoName}">Repository Name</h2>
+
+            <div class="meta-row">
+                <span>Language: <strong th:text="${insight?.dominantLanguage}">unknown</strong></span>
+                <span>Files: <strong th:text="${insight?.totalFiles}">0</strong></span>
+                <span>Modules: <strong th:text="${#lists.size(insight?.modules ?: #lists.emptyList())}">0</strong></span>
+                <span th:if="${result.completedAt}" th:text="'Generated: ' + ${result.completedAt}">date</span>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <div class="card-value" th:text="${insight?.totalFiles}">0</div>
+                    <div class="card-label">Files Analyzed</div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-value" th:text="${#lists.size(insight?.modules ?: #lists.emptyList())}">0</div>
+                    <div class="card-label">Architecture Layers</div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-value" th:text="${#lists.size(insight?.externalIntegrations ?: #lists.emptyList())}">0</div>
+                    <div class="card-label">Integrations</div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-value" th:text="${#lists.size(insight?.highRiskChangeAreas ?: #lists.emptyList())}">0</div>
+                    <div class="card-label">Risk Areas</div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-value" th:text="${#lists.size(insight?.suggestedGherkinScenarios ?: #lists.emptyList())}">0</div>
+                    <div class="card-label">Gherkin Suggestions</div>
+                </div>
+            </div>
+
+            <!-- Executive Summary -->
+            <div class="insight-card">
+                <h3>Executive Summary</h3>
+                <p th:text="${insight?.executiveSummary}">summary</p>
+            </div>
+
+            <div class="two-col">
+                <div class="insight-card">
+                    <h3>System Purpose</h3>
+                    <p th:text="${insight?.systemPurpose}">purpose</p>
+                </div>
+                <div class="insight-card">
+                    <h3>Domain Context</h3>
+                    <p th:text="${insight?.domainContext}">domain</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architecture Modules -->
+        <section id="modules" class="report-section">
+            <h2>🗂️ Architecture Modules</h2>
+            <div class="modules-grid">
+                <div th:each="mod : ${insight?.modules}" class="module-card">
+                    <div class="module-name" th:text="${mod.name}">name</div>
+                    <div class="module-role" th:text="${mod.role}">role</div>
+                    <p class="module-desc" th:text="${mod.description}">description</p>
+                    <div th:if="${!#lists.isEmpty(mod.dependencies)}" class="module-deps">
+                        <strong>Depends on:</strong>
+                        <span th:each="dep : ${mod.dependencies}" class="dep-badge" th:text="${dep}">dep</span>
+                    </div>
+                    <div th:if="${!#lists.isEmpty(mod.evidenceLinks)}" class="module-evidence">
+                        <strong>Evidence:</strong>
+                        <code th:each="ev : ${mod.evidenceLinks}" th:text="${ev.displayLabel}">file</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-card">
+                <h3>Architecture Overview</h3>
+                <p th:text="${insight?.architectureOverview}">overview</p>
+            </div>
+        </section>
+
+        <!-- Diagrams -->
+        <section id="diagrams" class="report-section">
+            <h2>📐 Architecture Diagrams</h2>
+            <div class="two-col">
+                <div class="insight-card">
+                    <h3>Architecture Diagram</h3>
+                    <div class="mermaid" th:text="${insight?.mermaidArchitectureDiagram}">graph TD</div>
+                </div>
+                <div class="insight-card">
+                    <h3>Request Flow Diagram</h3>
+                    <div class="mermaid" th:text="${insight?.mermaidFlowDiagram}">sequenceDiagram</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Request Lifecycle -->
+        <section class="report-section">
+            <h2>🔄 Request Lifecycle</h2>
+            <div class="insight-card">
+                <p th:text="${insight?.requestLifecycle}">lifecycle</p>
+            </div>
+            <div class="insight-card">
+                <h3>Core Logic Explanation</h3>
+                <p th:text="${insight?.coreLogicExplanation}">logic</p>
+            </div>
+        </section>
+
+        <!-- Integrations -->
+        <section id="integrations" class="report-section">
+            <h2>🔌 External Integrations</h2>
+            <div th:if="${#lists.isEmpty(insight?.externalIntegrations ?: #lists.emptyList())}" class="empty-state">
+                No external integrations detected.
+            </div>
+            <ul class="insight-list">
+                <li th:each="int : ${insight?.externalIntegrations}" th:text="${int}">integration</li>
+            </ul>
+        </section>
+
+        <!-- Risk Areas -->
+        <section id="risks" class="report-section">
+            <h2>⚠️ High-Risk Change Areas</h2>
+            <div class="risk-list">
+                <div th:each="risk : ${insight?.highRiskChangeAreas}" class="risk-item">
+                    <span class="risk-icon">⚠️</span>
+                    <code th:text="${risk}">risk</code>
+                </div>
+            </div>
+            <h3>Error-Prone Paths</h3>
+            <div class="risk-list">
+                <div th:each="path : ${insight?.errorPronePaths}" class="risk-item">
+                    <span class="risk-icon">🔥</span>
+                    <code th:text="${path}">path</code>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security -->
+        <section id="security" class="report-section">
+            <h2>🔒 Security-Sensitive Areas</h2>
+            <div th:if="${#lists.isEmpty(insight?.securitySensitiveAreas ?: #lists.emptyList())}" class="empty-state">
+                No security-sensitive areas detected.
+            </div>
+            <div class="risk-list">
+                <div th:each="area : ${insight?.securitySensitiveAreas}" class="risk-item security-item">
+                    <span class="risk-icon">🔒</span>
+                    <code th:text="${area}">area</code>
+                </div>
+            </div>
+        </section>
+
+        <!-- QA Strategy -->
+        <section id="qa-strategy" class="report-section">
+            <h2>🧪 Recommended QA Strategy</h2>
+            <div class="insight-card strategy-card">
+                <p th:text="${insight?.recommendedQaStrategy}">strategy</p>
+            </div>
+        </section>
+
+        <!-- Gherkin Scenarios -->
+        <section id="gherkin" class="report-section">
+            <h2>🥒 Suggested Gherkin Scenarios</h2>
+            <div th:each="scenario : ${insight?.suggestedGherkinScenarios}" class="gherkin-block">
+                <pre class="gherkin-code" th:text="${scenario}">scenario</pre>
+            </div>
+        </section>
+
+        <!-- Edge Cases -->
+        <section id="edge-cases" class="report-section">
+            <h2>🎯 Edge Cases &amp; Boundary Conditions</h2>
+            <ul class="insight-list">
+                <li th:each="ec : ${insight?.edgeCases}" th:text="${ec}">edge case</li>
+            </ul>
+        </section>
+
+        <!-- Stakeholder View -->
+        <section id="stakeholder" class="report-section">
+            <h2>👔 Stakeholder Explanation</h2>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('stakeholder-view', event)">Stakeholder</button>
+                <button class="tab-btn" onclick="showTab('technical-view', event)">Technical</button>
+            </div>
+            <div id="stakeholder-view" class="tab-content active insight-card">
+                <p th:text="${insight?.stakeholderExplanation}">stakeholder</p>
+            </div>
+            <div id="technical-view" class="tab-content insight-card hidden">
+                <p th:text="${insight?.technicalExplanation}">technical</p>
+            </div>
+        </section>
+
+        <!-- Missing Documentation -->
+        <section class="report-section" th:if="${!#lists.isEmpty(insight?.missingDocumentation ?: #lists.emptyList())}">
+            <h2>📝 Missing Documentation</h2>
+            <ul class="insight-list warning-list">
+                <li th:each="doc : ${insight?.missingDocumentation}" th:text="${doc}">doc</li>
+            </ul>
+        </section>
+
+        <!-- Assumptions & Limitations -->
+        <section id="assumptions" class="report-section">
+            <h2>📋 Assumptions &amp; Limitations</h2>
+            <div class="two-col">
+                <div class="insight-card">
+                    <h3>Assumptions</h3>
+                    <ul>
+                        <li th:each="a : ${insight?.assumptions}" th:text="${a}">assumption</li>
+                    </ul>
+                </div>
+                <div class="insight-card">
+                    <h3>Limitations</h3>
+                    <ul>
+                        <li th:each="l : ${insight?.limitations}" th:text="${l}">limitation</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<footer class="footer">
+    <div class="footer-content">
+        <p>RepoInsight &copy; 2025 — Enterprise QA Intelligence Platform</p>
+        <p class="footer-note">Results are heuristic-based. Validate with your engineering team.</p>
+    </div>
+</footer>
+
+<script th:src="@{/static/js/main.js}"></script>
+<script>
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+    function showTab(id, evt) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.remove('hidden');
+        if (evt && evt.currentTarget) { evt.currentTarget.classList.add('active'); }
+    }
+</script>
+</body>
+</html>

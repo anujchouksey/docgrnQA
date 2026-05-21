@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Analysis In Progress – RepoInsight</title>
+    <link rel="stylesheet" th:href="@{/static/css/main.css}"/>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/" class="nav-brand"><span class="brand-icon">🔍</span><span class="brand-name">RepoInsight</span></a>
+        <div class="nav-links">
+            <a th:href="@{/}" class="nav-link">Home</a>
+        </div>
+    </div>
+</nav>
+
+<main class="main-content">
+    <div class="container">
+        <div class="progress-page">
+            <div class="progress-icon" id="progressIcon">⏳</div>
+            <h1>Analysis In Progress</h1>
+            <p class="progress-message" id="progressMessage">Starting analysis...</p>
+
+            <div class="progress-bar-wrapper">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="progress-details">
+                <p>Run ID: <code th:text="${runId}">run-id</code></p>
+                <p>Mode: <span th:text="${mode}">mode</span></p>
+            </div>
+
+            <div id="completedActions" class="hidden">
+                <a id="viewReportLink" href="#" class="btn btn-primary btn-lg">📊 View Report</a>
+            </div>
+
+            <div id="failedMessage" class="error-box hidden">
+                <strong>Analysis Failed</strong>
+                <p id="errorText"></p>
+                <a th:href="@{/}" class="btn btn-secondary">Return Home</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="footer-content">
+        <p>RepoInsight &copy; 2025</p>
+    </div>
+</footer>
+
+<script th:inline="javascript">
+    const runId = [[${runId}]];
+    const mode = [[${mode}]];
+    let progress = 0;
+    let pollInterval;
+
+    function updateProgress(pct, msg) {
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('progressMessage').textContent = msg;
+    }
+
+    function poll() {
+        fetch('/api/status/' + runId)
+            .then(r => r.json())
+            .then(data => {
+                updateProgress(progress < 90 ? (progress += 15) : progress, data.message || 'Processing...');
+
+                if (data.completed) {
+                    updateProgress(100, 'Complete! Redirecting to report...');
+                    document.getElementById('progressIcon').textContent = '✅';
+                    clearInterval(pollInterval);
+                    let path = mode === 'COVERAGE'
+                        ? '/coverage/report/' + runId
+                        : '/understanding/report/' + runId;
+                    document.getElementById('viewReportLink').href = path;
+                    document.getElementById('completedActions').classList.remove('hidden');
+                    setTimeout(() => window.location.href = path, 2000);
+                } else if (data.failed) {
+                    updateProgress(100, 'Analysis failed');
+                    document.getElementById('progressIcon').textContent = '❌';
+                    clearInterval(pollInterval);
+                    document.getElementById('failedMessage').classList.remove('hidden');
+                    document.getElementById('errorText').textContent = data.message;
+                }
+            })
+            .catch(e => console.error('Poll error:', e));
+    }
+
+    pollInterval = setInterval(poll, 2000);
+    poll(); // immediate first call
+</script>
+</body>
+</html>
